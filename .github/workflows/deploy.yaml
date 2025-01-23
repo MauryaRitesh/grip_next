@@ -17,3 +17,7 @@ jobs:
         run: npm ci
       - name: Build Next.js app
         run: npm run build
+      - name: run Lighthouse CI
+        run: 
+          npm install -g @lhci/cli@0.3.x
+          lhci autorun --upload.target=temporary-public-storage || echo "LHCI failed!"
