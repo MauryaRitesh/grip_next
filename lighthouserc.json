@@ -7,7 +7,7 @@
     "assert": {
       "assertions": {
         "categories:performance": ["warn", {"minScore": 1.0}],
-        "categories:accessibility": ["error", {"minScore": 0.9}]
+        "categories:seo": ["error", {"minScore": 0.92}]
       }
     },
     "upload": {
