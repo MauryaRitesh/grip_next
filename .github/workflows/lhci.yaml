@@ -14,5 +14,5 @@ jobs:
       - run: npm install && npm install -g @lhci/cli@0.14.x
       - run: npm run build
       - run: lhci autorun
-      env:
-        LHCI_GITHUB_APP_TOKEN: ${{secrets.LIGHTHOUSE_APP_TOKEN}}
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{secrets.LIGHTHOUSE_APP_TOKEN}}
