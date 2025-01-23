@@ -1,8 +1,5 @@
-name: Deploy Next.js App
-on:
-  push:
-    branches:
-      - main
+name: LightHouse Integration
+on: [push]
 jobs:
   lighthouseci:
     runs-on: ubuntu-latest
