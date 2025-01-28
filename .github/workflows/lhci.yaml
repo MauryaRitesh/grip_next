@@ -1,18 +1,3 @@
-# on: [push]
-# jobs:
-#   lighthouseci:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - uses: actions/checkout@v3
-#       - uses: actions/setup-node@v3
-#         with:
-#           node-version: 18
-#       - run: npm install && npm install -g @lhci/cli@0.14.x
-#       - run: npm run build
-#       - run: lhci autorun
-#         env:
-#           LHCI_GITHUB_APP_TOKEN: ${{secrets.LIGHTHOUSE_APP_TOKEN}}
-
 name: LightHouse Integration
 on: [push]
 permissions:
@@ -43,11 +28,11 @@ jobs:
           CHANGED_ROUTES=()
           for FILE in $CHANGED_FILES; do
             echo "Processing file: $FILE"
-            if [[ $FILE == src/app/* ]]; then
-              ROUTE=$(echo $FILE | sed -E 's|^src/app||; s/\/page\.(js|ts|jsx|tsx)$//; s/\.(js|ts|jsx|tsx)$//')
+            if [[ $FILE == app/* ]]; then
+              ROUTE=$(echo $FILE | sed -E 's|^app/||; s/\/page\.(js|ts|jsx|tsx)$//; s/\.(js|ts|jsx|tsx)$//')
               ROUTE=$(echo $ROUTE | sed -E 's/\[([^]]+)\]/:\1/g')
               if [[ -n "$ROUTE" ]]; then
-                ROUTE="/${ROUTE#/}" # Remove leading slash if present, then add one
+                ROUTE="/${ROUTE}" # Add leading slash if not present
               else
                 ROUTE="/" # Handle root route
               fi
@@ -58,6 +43,7 @@ jobs:
           UNIQUE_ROUTES=$(echo "${CHANGED_ROUTES[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' ' | xargs)
           echo "Detected routes: $UNIQUE_ROUTES"
           echo "ROUTES=$UNIQUE_ROUTES" >> $GITHUB_ENV
+
       - name: Update lighthouserc.json with full domain
         if: env.ROUTES != 'null'
         run: |
