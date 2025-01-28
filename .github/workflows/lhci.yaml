@@ -1,4 +1,3 @@
-name: LightHouse Integration
 # on: [push]
 # jobs:
 #   lighthouseci:
@@ -14,8 +13,8 @@ name: LightHouse Integration
 #         env:
 #           LHCI_GITHUB_APP_TOKEN: ${{secrets.LIGHTHOUSE_APP_TOKEN}}
 
-on:
-  push: [push]
+name: LightHouse Integration
+on: [push]
 permissions:
   contents: write
 jobs:
