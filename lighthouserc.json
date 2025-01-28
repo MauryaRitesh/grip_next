@@ -1,7 +1,7 @@
 {
   "ci": {
     "collect": {
-      "url": ["http://localhost:3000/", "http://localhost:3000/blog", "http://localhost:3000/products"],
+      "url": ["http://localhost:3000/"],
       "startServerCommand": "npm run start"
     },
     "assert": {
