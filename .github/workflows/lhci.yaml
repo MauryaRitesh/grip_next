@@ -44,10 +44,10 @@ jobs:
           for FILE in $CHANGED_FILES; do
             echo "Processing file: $FILE"
             if [[ $FILE == app/* ]]; then
-              ROUTE=$(echo $FILE | sed -E 's|^src/app||; s/\/page\.(js|ts|jsx|tsx)$//; s/\.(js|ts|jsx|tsx)$//')
+              ROUTE=$(echo $FILE | sed -E 's|^app/||; s/\/page\.(js|ts|jsx|tsx)$//; s/\.(js|ts|jsx|tsx)$//')
               ROUTE=$(echo $ROUTE | sed -E 's/\[([^]]+)\]/:\1/g')
               if [[ -n "$ROUTE" ]]; then
-                ROUTE="/${ROUTE#/}" # Remove leading slash if present, then add one
+                ROUTE="/${ROUTE}" # Add leading slash if not present
               else
                 ROUTE="/" # Handle root route
               fi
@@ -58,6 +58,7 @@ jobs:
           UNIQUE_ROUTES=$(echo "${CHANGED_ROUTES[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' ' | xargs)
           echo "Detected routes: $UNIQUE_ROUTES"
           echo "ROUTES=$UNIQUE_ROUTES" >> $GITHUB_ENV
+
       - name: Update lighthouserc.json with full domain
         if: env.ROUTES != 'null'
         run: |
