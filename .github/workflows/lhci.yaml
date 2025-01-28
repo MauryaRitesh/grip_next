@@ -43,11 +43,11 @@ jobs:
           CHANGED_ROUTES=()
           for FILE in $CHANGED_FILES; do
             echo "Processing file: $FILE"
-            if [[ $FILE == app/* ]]; then
-              ROUTE=$(echo $FILE | sed -E 's|^app/||; s/\/page\.(js|ts|jsx|tsx)$//; s/\.(js|ts|jsx|tsx)$//')
+            if [[ $FILE == app/*/page.tsx ]]; then
+              ROUTE=$(echo $FILE | sed -E 's|^app/||; s|/page\.tsx$||')
               ROUTE=$(echo $ROUTE | sed -E 's/\[([^]]+)\]/:\1/g')
               if [[ -n "$ROUTE" ]]; then
-                ROUTE="/${ROUTE}" # Add leading slash if not present
+                ROUTE="/${ROUTE}" # Add leading slash
               else
                 ROUTE="/" # Handle root route
               fi
