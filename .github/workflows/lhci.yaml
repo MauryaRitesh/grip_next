@@ -15,9 +15,7 @@
 #           LHCI_GITHUB_APP_TOKEN: ${{secrets.LIGHTHOUSE_APP_TOKEN}}
 
 on:
-  push:
-    branches:
-      - main
+  push: [push]
 permissions:
   contents: write
 jobs:
