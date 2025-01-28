@@ -1,4 +1,4 @@
-# name: LightHouse Integration
+name: LightHouse Integration
 # on: [push]
 # jobs:
 #   lighthouseci:
