@@ -65,4 +65,7 @@ jobs:
         if: always()
         uses: thollander/actions-comment-pull-request@v3.0.1
         with:
-          filePath: lhci-comparison.md
+          file-path: lhci-comparison.md  # ✅ Corrected key name
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          mode: upsert
+          create-if-not-exists: true
