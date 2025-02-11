@@ -91,7 +91,7 @@ const currentMetrics = extractMetrics(current);
 
 let markdownReport = "### 🔍 Lighthouse Performance Metrics Comparison\n";
 markdownReport += "**(⚠️ Warnings shown if performance decreases, but build will NOT fail)**\n\n";
-markdownReport += "| Metric | Base Branch | Current Branch | Change |\n";
+markdownReport += "| Metric | Base Branch | Current Branch | Changes |\n";
 markdownReport += "|--------|-------------|---------------|--------|\n";
 
 const compare = (metric) => {
