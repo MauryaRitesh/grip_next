@@ -1,10 +1,6 @@
 name: Lighthouse CI
 
 on: [push]
-  # push:
-  #   branches:
-  #     - main
-  # pull_request:
 
 jobs:
   lighthouseci:
@@ -26,6 +22,13 @@ jobs:
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LIGHTHOUSE_APP_TOKEN }}
 
+      # 📂 Save Current Branch Report
+      - name: Upload Lighthouse Reports (Current Branch)
+        uses: actions/upload-artifact@v3
+        with:
+          name: lighthouse-current
+          path: ./lhci-current
+
       - name: Checkout base branch
         run: |
           git fetch origin main
@@ -37,6 +40,13 @@ jobs:
         run: lhci autorun --upload.target=filesystem --upload.outputDir=./lhci-base
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LIGHTHOUSE_APP_TOKEN }}
+
+      # 📂 Save Base Branch Report
+      - name: Upload Lighthouse Reports (Base Branch)
+        uses: actions/upload-artifact@v3
+        with:
+          name: lighthouse-base
+          path: ./lhci-base
 
       - name: Compare Performance Metrics
         run: node .github/scripts/compare-lhci.js
