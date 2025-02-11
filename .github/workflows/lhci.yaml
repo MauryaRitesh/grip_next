@@ -24,7 +24,7 @@ jobs:
 
       # 📂 Save Current Branch Report
       - name: Upload Lighthouse Reports (Current Branch)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: lighthouse-current
           path: ./lhci-current
@@ -47,7 +47,7 @@ jobs:
 
       # 📂 Save Base Branch Report
       - name: Upload Lighthouse Reports (Base Branch)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: lighthouse-base
           path: ./lhci-base
