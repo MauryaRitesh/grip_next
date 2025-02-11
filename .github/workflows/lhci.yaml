@@ -1,61 +1,48 @@
-name: LightHouse Integration
+name: Lighthouse CI
+
 on: [push]
-permissions:
-  contents: write
+  # push:
+  #   branches:
+  #     - main
+  # pull_request:
+
 jobs:
-  lighthouse:
+  lighthouseci:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          fetch-depth: 0
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '23'
-      - name: Install dependencies
-        run: npm install
-      - name: Build project
-        run: npm run build
-      - name: Install Lighthouse CI
-        run: npm install -g @lhci/cli@0.14.x
-      - name: Identify changed routes
-        id: routes
-        run: |
-          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD || git diff --name-only HEAD || echo "")
-          echo "Changed files: $CHANGED_FILES"
-          CHANGED_ROUTES=()
-          for FILE in $CHANGED_FILES; do
-            echo "Processing file: $FILE"
-            if [[ $FILE == app/* ]]; then
-              ROUTE=$(echo $FILE | sed -E 's|^app/||; s/\/page\.(js|ts|jsx|tsx)$//; s/\.(js|ts|jsx|tsx)$//')
-              ROUTE=$(echo $ROUTE | sed -E 's/\[([^]]+)\]/:\1/g')
-              if [[ -n "$ROUTE" ]]; then
-                ROUTE="/${ROUTE}" # Add leading slash if not present
-              else
-                ROUTE="/" # Handle root route
-              fi
-              echo "Extracted route: $ROUTE"
-              CHANGED_ROUTES+=("$ROUTE")
-            fi
-          done
-          UNIQUE_ROUTES=$(echo "${CHANGED_ROUTES[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' ' | xargs)
-          echo "Detected routes: $UNIQUE_ROUTES"
-          echo "ROUTES=$UNIQUE_ROUTES" >> $GITHUB_ENV
+          node-version: 18
 
-      - name: Update lighthouserc.json with full domain
-        if: env.ROUTES != 'null'
-        run: |
-          DOMAIN="http://localhost:3000"
-          ROUTE_ARRAY=$(echo "$ROUTES" | jq -R -s -c --arg domain "$DOMAIN" 'split(" ") | map(select(length > 0) | "\($domain)\(.)")')
-          jq ".ci.collect.url = $ROUTE_ARRAY" lighthouserc.json > updated-lighthouserc.json
-          mv updated-lighthouserc.json lighthouserc.json
-          cat lighthouserc.json
-      - name: Run Lighthouse CI
-        if: env.ROUTES != 'null'
-        run: lhci autorun --upload.target=temporary-public-storage
+      - name: Install Dependencies
+        run: npm install --force && npm install -g @lhci/cli@0.14.x
+
+      - name: Build the project
+        run: npm run build
+
+      - name: Run Lighthouse on current branch
+        run: lhci autorun --upload.target=filesystem --upload.outputDir=./lhci-current
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LIGHTHOUSE_APP_TOKEN }}
-        continue-on-error: true
 
+      - name: Checkout base branch
+        run: |
+          git fetch origin main
+          git checkout main
+          npm install
+          npm run build
+
+      - name: Run Lighthouse on base branch
+        run: lhci autorun --upload.target=filesystem --upload.outputDir=./lhci-base
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LIGHTHOUSE_APP_TOKEN }}
+
+      - name: Compare Performance Metrics
+        run: node .github/scripts/compare-lhci.js
+
+      - name: Post Performance Metrics as a comment on GitHub
+        if: always()
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          filePath: lhci-comparison.md

@@ -97,7 +97,7 @@ export default function Home() {
             width={16}
             height={16}
           />
-          Go to nextjs.org →
+          Go to nextjs.orggg →
         </a>
       </footer>
     </div>
