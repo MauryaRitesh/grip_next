@@ -24,7 +24,7 @@ jobs:
       - name: Run Lighthouse on current branch
         run: lhci autorun --upload.target=filesystem --upload.outputDir=./lhci-current
         env:
-          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LIGHTHOUSE_GIT_TOKEN }}
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LIGHTHOUSE_APP_TOKEN }}
 
       - name: Checkout base branch
         run: |
@@ -36,10 +36,10 @@ jobs:
       - name: Run Lighthouse on base branch
         run: lhci autorun --upload.target=filesystem --upload.outputDir=./lhci-base
         env:
-          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LIGHTHOUSE_GIT_TOKEN }}
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LIGHTHOUSE_APP_TOKEN }}
 
       - name: Compare Performance Metrics
-        run: node ../.github/scripts/compare-lhci.js
+        run: node .github/scripts/compare-lhci.js
 
       - name: Post Performance Metrics as a comment on GitHub
         if: always()
