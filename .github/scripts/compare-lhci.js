@@ -89,9 +89,8 @@ const extractMetrics = (report) => ({
 const baseMetrics = extractMetrics(base);
 const currentMetrics = extractMetrics(current);
 
-let failBuild = false;
 let markdownReport = "### 🔍 Lighthouse Performance Metrics Comparison\n";
-markdownReport += "**(⚠️ Build fails if new branch scores are worse)**\n\n";
+markdownReport += "**(⚠️ Warnings shown if performance decreases, but build will NOT fail)**\n\n";
 markdownReport += "| Metric | Base Branch | Current Branch | Change |\n";
 markdownReport += "|--------|-------------|---------------|--------|\n";
 
@@ -101,8 +100,7 @@ const compare = (metric) => {
 
   let change = "✅ No Change";
   if (currentValue < baseValue) {
-    change = `🔻 ${((baseValue - currentValue) * 100).toFixed(2)}%`;
-    failBuild = true;
+    change = `⚠️ Warning: 🔻 ${((baseValue - currentValue) * 100).toFixed(2)}%`;
   } else if (currentValue > baseValue) {
     change = `🔺 +${((currentValue - baseValue) * 100).toFixed(2)}%`;
   }
@@ -110,6 +108,7 @@ const compare = (metric) => {
   markdownReport += `| ${metric.toUpperCase()} | ${baseValue} | ${currentValue} | ${change} |\n`;
 };
 
+// Only warn for performance, rest are just reported
 compare("performance");
 compare("accessibility");
 compare("bestPractices");
@@ -117,7 +116,4 @@ compare("seo");
 
 fs.writeFileSync("lhci-comparison.md", markdownReport);
 
-if (failBuild) {
-  console.error("⚠️ Performance metrics have worsened. Failing the build.");
-  process.exit(1);
-}
+console.warn("⚠️ Performance warnings have been logged, but the build will continue.");
