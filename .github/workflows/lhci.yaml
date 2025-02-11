@@ -39,7 +39,7 @@ jobs:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LIGHTHOUSE_GIT_TOKEN }}
 
       - name: Compare Performance Metrics
-        run: node .github/scripts/compare-lhci.js
+        run: node ../.github/scripts/compare-lhci.js
 
       - name: Post Performance Metrics as a comment on GitHub
         if: always()
