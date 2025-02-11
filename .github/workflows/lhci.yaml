@@ -43,7 +43,7 @@ jobs:
           npm install
           npm run build
 
-      - name: Run Lighthouse on base branch
+      - name: Run Lighthouse on base branch heloo
         run: lhci autorun --upload.target=filesystem --upload.outputDir=./lhci-base
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LIGHTHOUSE_APP_TOKEN }}
