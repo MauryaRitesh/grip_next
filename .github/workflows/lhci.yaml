@@ -6,6 +6,8 @@ on:
 jobs:
   lighthouseci:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -41,7 +43,7 @@ jobs:
           npm install
           npm run build
 
-      - name: Run Lighthouse on base branch
+      - name: Run Lighthouse on base branch heloo
         run: lhci autorun --upload.target=filesystem --upload.outputDir=./lhci-base
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LIGHTHOUSE_APP_TOKEN }}
@@ -61,6 +63,9 @@ jobs:
 
       - name: Post Performance Metrics as a comment on GitHub
         if: always()
-        uses: thollander/actions-comment-pull-request@v2
+        uses: thollander/actions-comment-pull-request@v3.0.1
         with:
-          filePath: lhci-comparison.md
+          file-path: lhci-comparison.md  # ✅ Corrected key name
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          mode: upsert
+          create-if-not-exists: true
