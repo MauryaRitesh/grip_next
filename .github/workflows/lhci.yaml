@@ -3,6 +3,7 @@ name: Lighthouse CI
 on: 
   pull_request:
     types: [opened, synchronize, reopened]
+
 jobs:
   lighthouseci:
     runs-on: ubuntu-latest
@@ -10,6 +11,9 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Ensures full history for base branch checkout
+
       - uses: actions/setup-node@v3
         with:
           node-version: 18
@@ -32,18 +36,20 @@ jobs:
           name: lighthouse-current
           path: ./lhci-current
 
-      - name: Get previous branch name
-        id: previous_branch
-        run: echo "BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_ENV
+      # 🔹 Get the original branch name
+      - name: Store Current Branch Name
+        id: branch_name
+        run: echo "BRANCH_NAME=${GITHUB_HEAD_REF:-$(git rev-parse --abbrev-ref HEAD)}" >> $GITHUB_ENV
 
+      # 🔹 Checkout base branch **without switching workflow files**
       - name: Checkout base branch
         run: |
-          git fetch origin main
-          git checkout main
+          git fetch origin ${{ github.base_ref }}
+          git checkout ${{ github.base_ref }}
           npm install
           npm run build
 
-      - name: Run Lighthouse on base branch heloo
+      - name: Run Lighthouse on base branch
         run: lhci autorun --upload.target=filesystem --upload.outputDir=./lhci-base
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LIGHTHOUSE_APP_TOKEN }}
@@ -55,7 +61,8 @@ jobs:
           name: lighthouse-base
           path: ./lhci-base
 
-      - name: Checkout previous branch
+      # 🔹 Checkout the **original branch again**
+      - name: Switch Back to PR Branch
         run: git checkout ${{ env.BRANCH_NAME }}
 
       - name: Compare Performance Metrics
@@ -65,7 +72,7 @@ jobs:
         if: always()
         uses: thollander/actions-comment-pull-request@v3.0.1
         with:
-          file-path: lhci-comparison.md  # ✅ Corrected key name
+          file-path: lhci-comparison.md
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: upsert
           create-if-not-exists: true
