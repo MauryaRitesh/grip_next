@@ -42,8 +42,8 @@ const baseDetailed = extractDetailedMetrics(baseReport);
 const currentDetailed = extractDetailedMetrics(currentReport);
 
 // ✅ Generate markdown report
-let markdownReport = "### 🔍 Lighthouse Performance Metrics Comparison\n";
-markdownReport += "**(⚠️ Warnings shown if performance decreases, but build will NOT fail)**\n\n";
+let markdownReport = "### Lighthouse Metrics \n";
+// markdownReport += "**(⚠️ Warnings shown if performance decreases, but build will NOT fail)**\n\n";
 
 // 📊 **Overall Scores**
 markdownReport += "#### 📊 Overall Scores\n";
@@ -51,6 +51,13 @@ markdownReport += "| Metric | Base Branch | Current Branch | Change |\n";
 markdownReport += "|--------|-------------|---------------|--------|\n";
 
 const compare = (metric, baseValue, currentValue) => {
+  // Convert to two decimal places if value is a number
+  const formatValue = (value) => 
+    typeof value === "number" ? value.toFixed(2) : value;
+
+  const formattedBase = formatValue(baseValue);
+  const formattedCurrent = formatValue(currentValue);
+
   let change = "✅ No Change";
   if (baseValue !== "N/A" && currentValue !== "N/A") {
     if (currentValue > baseValue) {
@@ -59,7 +66,8 @@ const compare = (metric, baseValue, currentValue) => {
       change = `⚠️ Warning: 🔻 ${((baseValue - currentValue) / baseValue * 100).toFixed(2)}%`;
     }
   }
-  return `| ${metric} | ${baseValue} | ${currentValue} | ${change} |\n`;
+
+  return `| ${metric} | ${formattedBase} | ${formattedCurrent} | ${change} |\n`;
 };
 
 // Add overall scores
@@ -68,7 +76,7 @@ const compare = (metric, baseValue, currentValue) => {
 });
 
 // ⏳ **Detailed Metrics**
-markdownReport += "\n#### ⏳ Detailed Lighthouse Metrics (ms where applicable)\n";
+markdownReport += "\n#### ⏳ Performance Metrics \n";
 markdownReport += "| Metric | Base Branch | Current Branch | Change |\n";
 markdownReport += "|--------|-------------|---------------|--------|\n";
 

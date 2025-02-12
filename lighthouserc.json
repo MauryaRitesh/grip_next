@@ -1,7 +1,6 @@
 {
   "ci": {
     "collect": {
-      "numberOfRuns": 1,
       "url": ["http://localhost:3000"],
       "startServerCommand": "npm run start"
     },
