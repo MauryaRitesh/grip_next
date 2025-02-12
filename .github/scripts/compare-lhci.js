@@ -1,119 +1,83 @@
-// const fs = require("fs");
-
-// const baseReport = JSON.parse(fs.readFileSync("./lhci-base/manifest.json"));
-// const currentReport = JSON.parse(fs.readFileSync("./lhci-current/manifest.json"));
-
-// const thresholdForNewPages = 0.8;
-// let failBuild = false;
-
-// let markdownReport = "### 🔍 Lighthouse Performance Metrics Comparison\n";
-// markdownReport += "**(⚠️ Build fails if new branch scores are worse)**\n\n";
-// markdownReport += "| Page | Metric | Base Branch | Current Branch | Change |\n";
-// markdownReport += "|------|--------|-------------|---------------|--------|\n";
-
-// const getMetrics = (report) =>
-//   report.map(({ url, summary }) => ({
-//     url,
-//     fcp: summary.audits["first-contentful-paint"].numericValue / 1000, // Convert ms to seconds
-//     lcp: summary.audits["largest-contentful-paint"].numericValue / 1000,
-//     tbt: summary.audits["total-blocking-time"].numericValue,
-//     speedIndex: summary.audits["speed-index"].numericValue / 1000,
-//     cls: summary.audits["cumulative-layout-shift"].numericValue,
-//   }));
-
-// const baseMetrics = getMetrics(baseReport);
-// const currentMetrics = getMetrics(currentReport);
-
-// const baseMap = Object.fromEntries(baseMetrics.map((r) => [r.url, r]));
-
-// currentMetrics.forEach((current) => {
-//   const base = baseMap[current.url];
-
-//   const compare = (metric, lowerIsBetter = true) => {
-//     const baseValue = base ? base[metric] : "N/A";
-//     const currentValue = current[metric];
-
-//     let change = "✅ No Change";
-//     if (base) {
-//       const diff = (currentValue - baseValue).toFixed(2);
-//       if ((lowerIsBetter && currentValue > baseValue) || (!lowerIsBetter && currentValue < baseValue)) {
-//         change = `🔻 ${diff}`;
-//         failBuild = true;
-//       } else if (currentValue < baseValue) {
-//         change = `🔺 ${Math.abs(diff)}`;
-//       }
-//     } else {
-//       change = currentValue >= thresholdForNewPages ? "⚠️ Below Threshold" : "✅ New Page OK";
-//     }
-
-//     markdownReport += `| ${current.url} | ${metric.toUpperCase()} | ${baseValue} | ${currentValue.toFixed(2)} | ${change} |\n`;
-//   };
-
-//   compare("fcp");
-//   compare("lcp");
-//   compare("tbt", false);
-//   compare("speedIndex");
-//   compare("cls", false);
-// });
-
-// fs.writeFileSync("lhci-comparison.md", markdownReport);
-
-// if (failBuild) {
-//   console.error("⚠️ Performance metrics have worsened. Failing the build.");
-//   process.exit(1);
-// }
-
-
 const fs = require("fs");
 
-// Read manifest files
-const baseReport = JSON.parse(fs.readFileSync("./lhci-base/manifest.json"));
-const currentReport = JSON.parse(fs.readFileSync("./lhci-current/manifest.json"));
+// ✅ Read manifest.json files for base and current branches
+const baseManifest = JSON.parse(fs.readFileSync("./lhci-base/manifest.json"));
+const currentManifest = JSON.parse(fs.readFileSync("./lhci-current/manifest.json"));
 
-// Filter only representative runs
-const getRepresentativeRun = (report) =>
-  report.find((entry) => entry.isRepresentativeRun) || report[0];
+// ✅ Find representative runs
+const getRepresentativeRun = (manifest) =>
+  manifest.find((entry) => entry.isRepresentativeRun) || manifest[0];
 
-const base = getRepresentativeRun(baseReport);
-const current = getRepresentativeRun(currentReport);
+const baseRun = getRepresentativeRun(baseManifest);
+const currentRun = getRepresentativeRun(currentManifest);
 
-// Extract summary metrics
-const extractMetrics = (report) => ({
-  url: report?.url || "Unknown URL",
-  performance: report?.summary?.performance ?? "N/A",
-  accessibility: report?.summary?.accessibility ?? "N/A",
-  bestPractices: report?.summary?.["best-practices"] ?? "N/A",
-  seo: report?.summary?.seo ?? "N/A",
+// ✅ Read corresponding `.report.json` files for detailed metrics
+const baseReport = JSON.parse(fs.readFileSync(baseRun.jsonPath));
+const currentReport = JSON.parse(fs.readFileSync(currentRun.jsonPath));
+
+// ✅ Extract summary metrics from `manifest.json`
+const extractSummary = (run) => ({
+  performance: run?.summary?.performance ?? "N/A",
+  accessibility: run?.summary?.accessibility ?? "N/A",
+  bestPractices: run?.summary?.["best-practices"] ?? "N/A",
+  seo: run?.summary?.seo ?? "N/A",
 });
 
-const baseMetrics = extractMetrics(base);
-const currentMetrics = extractMetrics(current);
+const baseSummary = extractSummary(baseRun);
+const currentSummary = extractSummary(currentRun);
 
+// ✅ Extract detailed performance metrics from `report.json`
+const extractDetailedMetrics = (report) => ({
+  "First Contentful Paint": report.audits["first-contentful-paint"]?.numericValue ?? "N/A",
+  "Time to Interactive": report.audits["interactive"]?.numericValue ?? "N/A",
+  "First Meaningful Paint": report.audits["first-meaningful-paint"]?.numericValue ?? "N/A",
+  "Max Potential First Input Delay": report.audits["max-potential-fid"]?.numericValue ?? "N/A",
+  "Total Blocking Time": report.audits["total-blocking-time"]?.numericValue ?? "N/A",
+  "Speed Index": report.audits["speed-index"]?.numericValue ?? "N/A",
+  "Largest Contentful Paint": report.audits["largest-contentful-paint"]?.numericValue ?? "N/A",
+  "Cumulative Layout Shift": report.audits["cumulative-layout-shift"]?.numericValue ?? "N/A",
+});
+
+const baseDetailed = extractDetailedMetrics(baseReport);
+const currentDetailed = extractDetailedMetrics(currentReport);
+
+// ✅ Generate markdown report
 let markdownReport = "### 🔍 Lighthouse Performance Metrics Comparison\n";
 markdownReport += "**(⚠️ Warnings shown if performance decreases, but build will NOT fail)**\n\n";
-markdownReport += "| Metric | Base Branch | Current Branch | Changes |\n";
+
+// 📊 **Overall Scores**
+markdownReport += "#### 📊 Overall Scores\n";
+markdownReport += "| Metric | Base Branch | Current Branch | Change |\n";
 markdownReport += "|--------|-------------|---------------|--------|\n";
 
-const compare = (metric) => {
-  const baseValue = baseMetrics[metric];
-  const currentValue = currentMetrics[metric];
-
+const compare = (metric, baseValue, currentValue) => {
   let change = "✅ No Change";
-  if (currentValue < baseValue) {
-    change = `⚠️ Warning: 🔻 ${((baseValue - currentValue) * 100).toFixed(2)}%`;
-  } else if (currentValue > baseValue) {
-    change = `🔺 +${((currentValue - baseValue) * 100).toFixed(2)}%`;
+  if (baseValue !== "N/A" && currentValue !== "N/A") {
+    if (currentValue > baseValue) {
+      change = `🔺 +${((currentValue - baseValue) / baseValue * 100).toFixed(2)}%`;
+    } else if (currentValue < baseValue) {
+      change = `⚠️ Warning: 🔻 ${((baseValue - currentValue) / baseValue * 100).toFixed(2)}%`;
+    }
   }
-
-  markdownReport += `| ${metric.toUpperCase()} | ${baseValue} | ${currentValue} | ${change} |\n`;
+  return `| ${metric} | ${baseValue} | ${currentValue} | ${change} |\n`;
 };
 
-// Only warn for performance, rest are just reported
-compare("performance");
-compare("accessibility");
-compare("bestPractices");
-compare("seo");
+// Add overall scores
+["performance", "accessibility", "bestPractices", "seo"].forEach((metric) => {
+  markdownReport += compare(metric.toUpperCase(), baseSummary[metric], currentSummary[metric]);
+});
 
+// ⏳ **Detailed Metrics**
+markdownReport += "\n#### ⏳ Detailed Lighthouse Metrics (ms where applicable)\n";
+markdownReport += "| Metric | Base Branch | Current Branch | Change |\n";
+markdownReport += "|--------|-------------|---------------|--------|\n";
+
+// Add detailed performance metrics
+Object.keys(baseDetailed).forEach((metric) => {
+  markdownReport += compare(metric, baseDetailed[metric], currentDetailed[metric]);
+});
+
+// ✅ Write to markdown file
 fs.writeFileSync("lhci-comparison.md", markdownReport);
 
 console.warn("⚠️ Performance warnings have been logged, but the build will continue.");
