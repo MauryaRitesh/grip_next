@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Ensures full history for base branch checkout
+          fetch-depth: 0  
 
       - uses: actions/setup-node@v3
         with:
@@ -29,19 +29,16 @@ jobs:
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LIGHTHOUSE_APP_TOKEN }}
 
-      # 📂 Save Current Branch Report
       - name: Upload Lighthouse Reports (Current Branch)
         uses: actions/upload-artifact@v4
         with:
           name: lighthouse-current
           path: ./lhci-current
 
-      # 🔹 Get the original branch name
       - name: Store Current Branch Name
         id: branch_name
         run: echo "BRANCH_NAME=${GITHUB_HEAD_REF:-$(git rev-parse --abbrev-ref HEAD)}" >> $GITHUB_ENV
 
-      # 🔹 Checkout base branch **without switching workflow files**
       - name: Checkout base branch
         run: |
           git fetch origin ${{ github.base_ref }}
@@ -54,14 +51,12 @@ jobs:
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LIGHTHOUSE_APP_TOKEN }}
 
-      # 📂 Save Base Branch Report
       - name: Upload Lighthouse Reports (Base Branch)
         uses: actions/upload-artifact@v4
         with:
           name: lighthouse-base
           path: ./lhci-base
 
-      # 🔹 Checkout the **original branch again**
       - name: Switch Back to PR Branch
         run: git checkout ${{ env.BRANCH_NAME }}
 
